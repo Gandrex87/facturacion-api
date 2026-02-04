@@ -1,0 +1,9 @@
+psycopg[binary]
+pydantic
+python-dotenv
+mcp
+fastapi
+uvicorn
+
+
+
