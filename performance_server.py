@@ -205,7 +205,7 @@ def obtener_zona(
                     "tiene_zona": True,
                     "zona": {
                         "nombre": row['zona_nombre'],
-                        "descripcion": row['zona_descripcion']
+                       # "descripcion": row['zona_descripcion']
                     }
                 }
 

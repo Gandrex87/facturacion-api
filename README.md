@@ -83,3 +83,9 @@ Imagen Docker única
 ├── docker-compose.yml        # Dos servicios
 ├── .env                      # Variables de entorno
 └── .env.example              # Plantilla
+
+
+# GIT
+git add .
+git commit -m "feat: API de facturación para agentes V2"
+git push -u origin main
