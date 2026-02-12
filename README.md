@@ -47,11 +47,39 @@ El agent_server.py sería ideal si quisieras que los agentes usaran Claude Deskt
 
 # Asegúrate de estar en /home/chatbot/CHATBOT_FINANZAS/facturacion_api
 
-# 1. Construir la imagen
+# 1. Build de la imagen única (solo una vez)
 docker-compose build
 
-# 2. Levantar el servicio
+# 2. Levantar AMBOS servicios
 docker-compose up -d
 
-# 3. Ver los logs en tiempo real
+# 3. Ver logs de ambos
 docker-compose logs -f
+
+# 4. Ver logs de uno específico
+docker-compose logs -f facturacion-api
+docker-compose logs -f performance-api
+
+# 5. Verificar salud
+curl http://localhost:8000/health
+curl http://localhost:8004/health
+
+
+
+Imagen Docker única
+    ↓
+├── Contenedor 1: facturacion-api (puerto 8000)
+│   CMD: uvicorn facturacion_server:app --port 8000
+│
+└── Contenedor 2: performance-api (puerto 8004)
+    CMD: uvicorn performance_server:app --port 8004
+
+
+/home/chatbot/CHATBOT_FINANZAS/agentes_api/
+├── facturacion_server.py    # API de facturas (puerto 8000)
+├── performance_server.py     # API de performance (puerto 8004)
+├── requirements.txt          # Dependencias compartidas
+├── Dockerfile                # Imagen única
+├── docker-compose.yml        # Dos servicios
+├── .env                      # Variables de entorno
+└── .env.example              # Plantilla
