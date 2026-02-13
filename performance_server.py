@@ -18,6 +18,11 @@ app = FastAPI(
 class PerformanceRequest(BaseModel):
     anyo: Optional[int] = None  # Si es None, devuelve histórico total
 
+# --- MODELO DE REQUEST ---
+class ZonaStatsRequest(BaseModel):
+    nombre_zona: Optional[str] = None # Si es null, trae el top general
+    limit: int = 10
+
 # --- CONEXIÓN BD ---
 def get_db_connection():
     try:
@@ -215,6 +220,53 @@ def obtener_zona(
         print(f"❌ Error en mi-zona: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# --- ENDPOINT 3 ESTADISTICAS ZONAS ---
+@app.post("/tools/stats-zonas")
+def consultar_stats_zonas(req: ZonaStatsRequest):
+    """
+    Entrega estadísticas de mercado por zona.
+    Útil para responder: "¿Cuál es la zona más cara?", "¿Precio m2 en Camins al Grau?"
+    """
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                
+                query = """
+                    SELECT zona, num_ventas, precio_medio, precio_m2_medio, total_honorarios
+                    FROM view_stats_zonas
+                """
+                params = []
+
+                # Búsqueda difusa si el agente pregunta por una zona específica
+                if req.nombre_zona:
+                    query += " WHERE zona ILIKE %s"
+                    # El % permite buscar "Camins" y encontrar "Camins al Grau"
+                    params.append(f"%{req.nombre_zona}%")
+                
+                query += " ORDER BY num_ventas DESC LIMIT %s"
+                params.append(req.limit)
+
+                cur.execute(query, params)
+                rows = cur.fetchall()
+
+                if not rows:
+                    return {
+                        "mensaje": f"No se encontraron datos para la zona '{req.nombre_zona}'",
+                        "data": []
+                    }
+
+                return {
+                    "count": len(rows),
+                    "tipo_busqueda": "Específica" if req.nombre_zona else "Top Mercado",
+                    "data": rows
+                }
+
+    except Exception as e:
+        print(f"❌ Error en stats-zonas: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # --- ENDPOINT ROOT ---
 @app.get("/")
 def root():
@@ -225,7 +277,8 @@ def root():
         "endpoints": {
             "health": "/health",
             "mi_performance": "/tools/mi-performance",
-            "mi_zona": "/tools/mi-zona"
+            "mi_zona": "/tools/mi-zona",
+            "stats_zonas": "/tools/stats-zonas"
         }
     }
 
